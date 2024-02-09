@@ -1,0 +1,3 @@
+2024-02-08 15:28:27 - Malicious IP 192.168.50.66 - Malicious domain detected: www.meanhackers.com.
+2024-02-08 15:28:29 - Malicious IP 8.8.8.8 - Malicious domain detected: www.meanhackers.com.
+2024-02-08 15:28:34 - Malicious IP 192.168.1.100 - Malicious IP detected
