@@ -1,51 +1,69 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox, filedialog, ttk
 import threading
 from scapy.all import sniff, wrpcap, IP, TCP, send, UDP, DNS, DNSQR
 import datetime
-import winsound
+import pygame
 import pickle
 import time
 from PIL import Image, ImageTk
+import os
+
 class NIDSApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Network Intrusion Detection System")
 
+        self.style = ttk.Style()
+
+        self.style.configure('Rounded.TButton', font=('Helvetica', 12), foreground='black', background='#111111', padding=10, borderwidth=5, relief='raised', bordercolor='white', focuscolor='#111111', focusthickness=5, highlightbackground='#111111')
+
+        self.style.map('Rounded.TButton', background=[('active', '#111111'), ('pressed', '#111111')])
+
         logo_img = Image.open("school_logo.png")
         logo_img = logo_img.resize((100, 100), Image.LANCZOS)
         self.school_logo = ImageTk.PhotoImage(logo_img)
 
-        self.logo_label = tk.Label(self.root, image=self.school_logo)
-        self.logo_label.grid(row=0, column=0, padx=10, pady=10)
+        self.title_label = tk.Label(self.root, text="Capstone Project: Signature-Based NIDS", background='#111111', foreground='white', font=("Helvetica", 16, "bold"), anchor="center")
+        self.title_label.grid(row=1, column=1, padx=10, pady=10)
 
-        self.packet_info_label = tk.Label(self.root, text="Packet Information")
-        self.packet_info_label.grid(row=1, column=0, padx=10, pady=10)  
+        self.logo_label = tk.Label(self.root, image=self.school_logo, background='#111111')
+        self.logo_label.grid(row=0, column=1, padx=10, pady=10)
 
-        self.packet_info_text = tk.Text(self.root, height=20, width=80, font=("Helvetica", 10))
-        self.packet_info_text.grid(row=2, column=0, padx=10, pady=5)  
+        self.packet_info_label = tk.Label(self.root, text="PACKET INFORMATION", background='#111111', foreground='white', font=("Helvetica", 12, "bold"), anchor="center")
+        self.packet_info_label.grid(row=2, column=1, padx=10, pady=10)
 
-        self.alert_log_label = tk.Label(self.root, text="Alert Log")
-        self.alert_log_label.grid(row=3, column=0, padx=10, pady=10)  
+        self.alert_sound_directory = "sounds"
+        self.alert_sound_file = os.path.join(self.alert_sound_directory, "alert.wav")
 
-        # Change font for alert log text widget
-        self.alert_log_text = tk.Text(self.root, height=10, width=100, font=("Helvetica", 10))
-        self.alert_log_text.grid(row=4, column=0, padx=10, pady=5)  
+        self.root.configure(background='#111111')
 
-        self.start_button = tk.Button(self.root, text="Start Monitoring", command=self.start_monitoring)
-        self.start_button.grid(row=5, column=0, padx=10, pady=5)
+        self.packet_info_text = tk.Text(self.root, height=20, width=80, font=("Helvetica", 10), background='#222222', foreground='white', borderwidth=2, relief="solid", highlightthickness=2, highlightbackground="white")
+        self.packet_info_text.grid(row=3, column=1, padx=10, pady=5)
 
-        self.stop_button = tk.Button(self.root, text="Stop Monitoring", command=self.stop_monitoring, state=tk.DISABLED)
-        self.stop_button.grid(row=6, column=0, padx=10, pady=5)
+        self.alert_log_label = tk.Label(self.root, text="ALERT LOG", background='#111111', foreground='white', font=("Helvetica", 12, "bold"), anchor="center")
+        self.alert_log_label.grid(row=4, column=1, padx=10, pady=10)
 
-        self.save_packets_button = tk.Button(self.root, text="Save Packets", command=self.save_packets, state=tk.DISABLED)
-        self.save_packets_button.grid(row=7, column=0, padx=10, pady=5)
+        self.alert_log_text = tk.Text(self.root, height=10, width=100, font=("Helvetica", 10), background='#222222', foreground='white', borderwidth=2, relief="solid", highlightthickness=2, highlightbackground="white")
+        self.alert_log_text.grid(row=5, column=1, padx=10, pady=5)
 
-        self.save_alerts_button = tk.Button(self.root, text="Save Alerts", command=self.save_alerts, state=tk.DISABLED)
-        self.save_alerts_button.grid(row=8, column=0, padx=10, pady=5)
+        self.start_button = ttk.Button(self.root, text="Start Monitoring", command=self.start_monitoring, style='Rounded.TButton')
+        self.start_button.grid(row=6, column=1, padx=10, pady=5)
 
-        self.clear_alerts_button = tk.Button(self.root, text="Clear Alerts", command=self.clear_alerts, state=tk.DISABLED)
-        self.clear_alerts_button.grid(row=9, column=0, padx=10, pady=5)
+        self.stop_button = ttk.Button(self.root, text="Stop Monitoring", command=self.stop_monitoring, state=tk.DISABLED, style='Rounded.TButton')
+        self.stop_button.grid(row=7, column=1, padx=10, pady=5)
+
+        self.save_packets_button = ttk.Button(self.root, text="Save Packets", command=self.save_packets, state=tk.DISABLED, style='Rounded.TButton')
+        self.save_packets_button.grid(row=8, column=1, padx=10, pady=5)
+
+        self.save_alerts_button = ttk.Button(self.root, text="Save Alerts", command=self.save_alerts, state=tk.DISABLED, style='Rounded.TButton')
+        self.save_alerts_button.grid(row=9, column=1, padx=10, pady=5)
+
+        self.clear_alerts_button = ttk.Button(self.root, text="Clear Alerts", command=self.clear_alerts, state=tk.DISABLED, style='Rounded.TButton')
+        self.clear_alerts_button.grid(row=10, column=1, padx=10, pady=5)
+
+        self.choose_alert_sound_button = ttk.Button(self.root, text="Choose Alert Sound", command=self.choose_alert_sound, style='Rounded.TButton')
+        self.choose_alert_sound_button.grid(row=11, column=1, padx=10, pady=5)
 
         self.interface = 'Wi-Fi'
         self.stop_event = threading.Event()
@@ -55,13 +73,40 @@ class NIDSApp:
 
         self.alerts = []
         self.alert_count = 0
-        self.alert_label = tk.Label(self.root, text="Alerts: 0")
-        self.alert_label.grid(row=10, column=0, padx=10, pady=5)
+        self.alert_label = tk.Label(self.root, text="Alerts: 0", background='#111111', foreground='white')
+        self.alert_label.grid(row=12, column=1, padx=10, pady=5)
 
         self.packet_count = 0
         self.packets = []
 
         self.load_saved_data()
+
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(1, weight=1)
+        self.root.grid_rowconfigure(2, weight=1)
+        self.root.grid_rowconfigure(3, weight=1)
+        self.root.grid_rowconfigure(4, weight=1)
+        self.root.grid_rowconfigure(5, weight=1)
+        self.root.grid_rowconfigure(6, weight=1)
+        self.root.grid_rowconfigure(7, weight=1)
+        self.root.grid_rowconfigure(8, weight=1)
+        self.root.grid_rowconfigure(9, weight=1)
+        self.root.grid_rowconfigure(10, weight=1)
+        self.root.grid_rowconfigure(11, weight=1)
+        self.root.grid_columnconfigure(1, weight=1)
+
+        window_width = 1920
+        window_height = 1080
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+    def choose_alert_sound(self):
+        filename = filedialog.askopenfilename(initialdir=self.alert_sound_directory, filetypes=[("Sound files", "*.*")])
+        if filename:
+            self.alert_sound_file = filename
 
     def send_fake_packet(self):
         fake_tcp_packet = IP(src="192.168.1.100", dst="8.8.8.8") / TCP(dport=80)
@@ -223,6 +268,7 @@ class NIDSApp:
         self.save_packets_button.config(state=tk.NORMAL)
         self.save_alerts_button.config(state=tk.NORMAL)
         self.clear_alerts_button.config(state=tk.NORMAL)
+        self.choose_alert_sound_button.config(state=tk.DISABLED)
 
         self.stop_event.clear()
 
@@ -235,6 +281,8 @@ class NIDSApp:
         self.stop_button.config(state=tk.DISABLED)
         self.save_packets_button.config(state=tk.NORMAL)
         self.save_alerts_button.config(state=tk.NORMAL)
+        self.clear_alerts_button.config(state=tk.NORMAL)
+        self.choose_alert_sound_button.config(state=tk.NORMAL)
         self.stop_event.set()
 
         self.save_data()
@@ -288,12 +336,17 @@ class NIDSApp:
             messagebox.showerror("Error", f"Failed to clear alert log file: {e}")
 
     def play_alert_sound(self):
-        winsound.PlaySound("alert.wav", winsound.SND_FILENAME)
+        pygame.mixer.init()
+        alert_sound_path = self.alert_sound_file  # Use the selected alert sound file
+        if os.path.exists(alert_sound_path):  # Check if the file exists
+            pygame.mixer.music.load(alert_sound_path)
+            pygame.mixer.music.play()
+        else:
+            messagebox.showerror("Error", "Alert sound file not found!")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = NIDSApp(root)
 
-    root.geometry("1920x1080")
-    
     root.mainloop()
